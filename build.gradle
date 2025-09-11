@@ -6,7 +6,7 @@ plugins {
 
 group = 'com.project'
 version = '0.0.1-SNAPSHOT'
-description = 'cinema'
+description = 'ticket'
 
 java {
     toolchain {
