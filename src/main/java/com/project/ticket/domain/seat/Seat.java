@@ -36,4 +36,11 @@ public class Seat {
 
   @Column(name = "updated_at")
   private LocalDateTime updatedAt;
+
+  public void reserve() {
+    if(this.status == SeatStatus.AVAILABLE) {
+      throw new IllegalStateException("예약이 불가능한 좌석입니다.");
+    } this.status = SeatStatus.RESERVED;
+  }
+
 }
