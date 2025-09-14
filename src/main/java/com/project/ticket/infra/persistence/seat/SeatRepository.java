@@ -1,4 +1,4 @@
-package com.project.ticket.infra.seat;
+package com.project.ticket.infra.persistence.seat;
 
 import com.project.ticket.domain.seat.Seat;
 import org.springframework.data.jpa.repository.JpaRepository;

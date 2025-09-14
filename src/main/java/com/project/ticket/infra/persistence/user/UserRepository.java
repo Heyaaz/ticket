@@ -1,4 +1,4 @@
-package com.project.ticket.infra.user;
+package com.project.ticket.infra.persistence.user;
 
 import com.project.ticket.domain.user.User;
 import org.springframework.data.jpa.repository.JpaRepository;

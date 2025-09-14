@@ -1,4 +1,4 @@
-package com.project.ticket.status;
+package com.project.ticket.domain.status;
 
 public enum SeatStatus {
   AVAILABLE,      // 예약 가능

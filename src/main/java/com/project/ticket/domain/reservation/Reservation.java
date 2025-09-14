@@ -3,7 +3,7 @@ package com.project.ticket.domain.reservation;
 import com.project.ticket.domain.concert.Concert;
 import com.project.ticket.domain.seat.Seat;
 import com.project.ticket.domain.user.User;
-import com.project.ticket.status.ReservationStatus;
+import com.project.ticket.domain.status.ReservationStatus;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;

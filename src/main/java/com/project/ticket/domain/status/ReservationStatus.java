@@ -1,4 +1,4 @@
-package com.project.ticket.status;
+package com.project.ticket.domain.status;
 
 public enum ReservationStatus {
   PENDING,          // 처리 대기 (대기열)

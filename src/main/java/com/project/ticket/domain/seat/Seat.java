@@ -1,6 +1,6 @@
 package com.project.ticket.domain.seat;
 
-import com.project.ticket.status.SeatStatus;
+import com.project.ticket.domain.status.SeatStatus;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
