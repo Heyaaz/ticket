@@ -52,4 +52,14 @@ public class Reservation {
 
   @Column(name = "updated_at")
   private LocalDateTime updatedAt;
+
+  public static Reservation create(User user, Seat seat) {
+    Reservation reservation = new Reservation();
+    reservation.user = user;
+    reservation.seat = seat;
+    reservation.status = ReservationStatus.CONFIRMED;
+    reservation.creatAt = LocalDateTime.now();
+    reservation.updatedAt = null;
+    return reservation;
+  }
 }

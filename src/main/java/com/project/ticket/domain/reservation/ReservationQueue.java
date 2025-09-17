@@ -33,4 +33,32 @@ public class ReservationQueue {
   private LocalDateTime createdAt;
 
   private LocalDateTime updatedAt;
+
+  public ReservationQueue(Long userId, Long seatId) {
+    this.userId = userId;
+    this.seatId = seatId;
+  }
+
+  public static ReservationQueue create(Long userId, Long seatId) {
+    ReservationQueue queue = new ReservationQueue(userId, seatId);
+    queue.status = QueueStatus.PENDING;
+    queue.createdAt = LocalDateTime.now();
+    queue.updatedAt = null;
+    return queue;
+  }
+
+  public void markProcessing() {
+    this.status = QueueStatus.PROCESSING;
+    this.updatedAt = LocalDateTime.now();
+  }
+
+  public void markSuccess() {
+    this.status = QueueStatus.SUCCESS;
+    this.updatedAt = LocalDateTime.now();
+  }
+
+  public void markFailed() {
+    this.status = QueueStatus.FAILED;
+    this.updatedAt = LocalDateTime.now();
+  }
 }
