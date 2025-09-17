@@ -12,10 +12,12 @@ import com.project.ticket.infra.persistence.reservation.ReservationRepository;
 import com.project.ticket.infra.persistence.reservationqueue.ReservationQueueRepository;
 import com.project.ticket.infra.persistence.seat.SeatRepository;
 import com.project.ticket.infra.persistence.user.UserRepository;
-import java.util.Optional;
+import org.springframework.data.domain.PageRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -28,6 +30,11 @@ public class ReservationApplicationService {
 
   @Transactional
   public ReservationEnqueueResponse requestReservation(ReservationEnqueueRequest request) {
+    if (reservationQueueRepository.existsByUserIdAndSeatIdAndStatusIn(
+        request.userId(), request.seatId(), List.of(QueueStatus.PENDING, QueueStatus.PROCESSING))) {
+      throw new IllegalStateException("이미 예약 대기열에 등록된 요청입니다.");
+    }
+
     userRepository.findById(request.userId())
         .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
 
@@ -47,37 +54,39 @@ public class ReservationApplicationService {
     ReservationQueue queue = reservationQueueRepository.findById(queueId)
         .orElseThrow(() -> new IllegalArgumentException("대기열을 찾을 수 없습니다."));
 
-    Long reservationId = null;
-    if (queue.getStatus() == QueueStatus.SUCCESS) {
-      Optional<Reservation> reservation = reservationRepository.findAll().stream()
-          .filter(r -> r.getSeat() != null && r.getSeat().getId().equals(queue.getSeatId()))
-          .findFirst();
-      reservationId = reservation.map(Reservation::getId).orElse(null);
-    }
-
     return ReservationStatusResponse.builder()
         .queueId(queue.getId())
         .status(queue.getStatus())
-        .reservationId(reservationId)
+        .reservationId(queue.getReservationId())
         .build();
+  }
+
+  @Transactional
+  public void processPendingReservations(int size) {
+    List<ReservationQueue> tasks = reservationQueueRepository
+        .findByStatusOrderByCreatedAtAsc(QueueStatus.PENDING, PageRequest.of(0, size));
+
+    for (ReservationQueue task : tasks) {
+      processSingleTask(task);
+    }
   }
 
   private void processSingleTask(ReservationQueue task) {
     try {
       task.markProcessing();
 
+      User user = userRepository.findById(task.getUserId())
+          .orElseThrow(() -> new IllegalStateException("사용자 정보가 존재하지 않습니다."));
+
       Seat seat = seatRepository.findById(task.getSeatId())
           .orElseThrow(() -> new IllegalStateException("좌석 정보가 존재하지 않습니다."));
 
       seat.reserve();
 
-      User user = userRepository.findById(task.getUserId())
-          .orElseThrow(() -> new IllegalStateException("사용자 정보가 존재하지 않습니다."));
-
       Reservation reservation = Reservation.create(user, seat);
       reservationRepository.save(reservation);
 
-      task.markSuccess();
+      task.markSuccess(reservation.getId());
     } catch (Exception e) {
       task.markFailed();
     }

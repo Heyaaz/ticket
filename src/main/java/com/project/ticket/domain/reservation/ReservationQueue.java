@@ -34,6 +34,8 @@ public class ReservationQueue {
 
   private LocalDateTime updatedAt;
 
+  private Long reservationId;
+
   public ReservationQueue(Long userId, Long seatId) {
     this.userId = userId;
     this.seatId = seatId;
@@ -53,6 +55,12 @@ public class ReservationQueue {
   }
 
   public void markSuccess() {
+    this.status = QueueStatus.SUCCESS;
+    this.updatedAt = LocalDateTime.now();
+  }
+
+  public void markSuccess(Long reservationId) {
+    this.reservationId = reservationId;
     this.status = QueueStatus.SUCCESS;
     this.updatedAt = LocalDateTime.now();
   }
