@@ -36,4 +36,14 @@ public class Concert {
 
   @Column(name = "updated_at")
   private LocalDateTime updatedAt;
+
+  public static Concert create(String title, String venue, LocalDateTime concertDate) {
+    Concert c = new Concert();
+    c.title = title;
+    c.venue = venue;
+    c.concertDate = concertDate;
+    c.createdAt = LocalDateTime.now();
+    c.updatedAt = null;
+    return c;
+  }
 }

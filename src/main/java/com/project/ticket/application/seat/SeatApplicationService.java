@@ -78,6 +78,17 @@ public class SeatApplicationService {
     seatRepository.delete(seat);
   }
 
+  @Transactional
+  public long deleteSeatsByConcert(Long concertId) {
+    if (!concertRepository.existsById(concertId)) {
+      throw new IllegalArgumentException("콘서트를 찾을 수 없습니다.");
+    }
+    if (seatRepository.existsByConcertIdAndStatus(concertId, SeatStatus.RESERVED)) {
+      throw new IllegalStateException("예약된 좌석이 있어 일괄 삭제할 수 없습니다.");
+    }
+    return seatRepository.deleteByConcertId(concertId);
+  }
+
   private static SeatResponse toResponse(Seat s) {
     return SeatResponse.builder()
         .id(s.getId())
