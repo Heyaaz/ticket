@@ -1,0 +1,88 @@
+package com.project.ticket.application.seat;
+
+import com.project.ticket.application.seat.dto.SeatCreateRequest;
+import com.project.ticket.application.seat.dto.SeatResponse;
+import com.project.ticket.application.seat.dto.SeatUpdateRequest;
+import com.project.ticket.domain.concert.Concert;
+import com.project.ticket.domain.seat.Seat;
+import com.project.ticket.domain.status.SeatStatus;
+import com.project.ticket.infra.persistence.concert.ConcertRepository;
+import com.project.ticket.infra.persistence.seat.SeatRepository;
+import java.util.List;
+import java.util.stream.Collectors;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+@Service
+@RequiredArgsConstructor
+public class SeatApplicationService {
+
+  private final SeatRepository seatRepository;
+  private final ConcertRepository concertRepository;
+
+  @Transactional(readOnly = true)
+  public List<SeatResponse> getSeatsByConcert(Long concertId) {
+    if (!concertRepository.existsById(concertId)) {
+      throw new IllegalArgumentException("콘서트를 찾을 수 없습니다.");
+    }
+    return seatRepository.findByConcertIdOrderBySeatNumberAsc(concertId)
+        .stream()
+        .map(SeatApplicationService::toResponse)
+        .collect(Collectors.toList());
+  }
+
+  @Transactional
+  public SeatResponse createSeat(SeatCreateRequest request) {
+    Concert concert = concertRepository.findById(request.concertId())
+        .orElseThrow(() -> new IllegalArgumentException("콘서트를 찾을 수 없습니다."));
+
+    if (seatRepository.existsByConcertIdAndSeatNumber(request.concertId(), request.seatNumber())) {
+      throw new IllegalStateException("이미 존재하는 좌석 번호입니다.");
+    }
+
+    Seat seat = Seat.create(concert, request.seatNumber());
+    Seat saved = seatRepository.save(seat);
+    return toResponse(saved);
+  }
+
+  @Transactional
+  public SeatResponse updateSeat(Long seatId, SeatUpdateRequest request) {
+    Seat seat = seatRepository.findById(seatId)
+        .orElseThrow(() -> new IllegalArgumentException("좌석을 찾을 수 없습니다."));
+
+    if (request.seatNumber() != null) {
+      // 중복 좌석 번호 방지
+      Long concertId = seat.getConcert().getId();
+      if (seatRepository.existsByConcertIdAndSeatNumber(concertId, request.seatNumber())
+          && !request.seatNumber().equals(seat.getSeatNumber())) {
+        throw new IllegalStateException("이미 존재하는 좌석 번호입니다.");
+      }
+      seat.updateSeatNumber(request.seatNumber());
+    }
+
+    if (request.status() != null) {
+      seat.updateStatus(request.status());
+    }
+
+    return toResponse(seat);
+  }
+
+  @Transactional
+  public void deleteSeat(Long seatId) {
+    Seat seat = seatRepository.findById(seatId)
+        .orElseThrow(() -> new IllegalArgumentException("좌석을 찾을 수 없습니다."));
+    if (seat.getStatus() == SeatStatus.RESERVED) {
+      throw new IllegalStateException("예약된 좌석은 삭제할 수 없습니다.");
+    }
+    seatRepository.delete(seat);
+  }
+
+  private static SeatResponse toResponse(Seat s) {
+    return SeatResponse.builder()
+        .id(s.getId())
+        .seatNumber(s.getSeatNumber())
+        .status(s.getStatus())
+        .build();
+  }
+}

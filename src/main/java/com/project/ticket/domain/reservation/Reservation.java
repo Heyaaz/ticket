@@ -57,6 +57,7 @@ public class Reservation {
     Reservation reservation = new Reservation();
     reservation.user = user;
     reservation.seat = seat;
+    reservation.concert = seat.getConcert();
     reservation.status = ReservationStatus.CONFIRMED;
     reservation.creatAt = LocalDateTime.now();
     reservation.updatedAt = null;
