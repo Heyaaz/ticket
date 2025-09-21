@@ -2,6 +2,7 @@ package com.project.ticket.application.user;
 
 import com.project.ticket.application.user.dto.UserCreateRequest;
 import com.project.ticket.application.user.dto.UserResponse;
+import com.project.ticket.domain.exception.DuplicateNicknameException;
 import com.project.ticket.domain.user.User;
 import com.project.ticket.infra.persistence.user.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -17,7 +18,7 @@ public class UserApplicationService {
   @Transactional
   public UserResponse createUser(UserCreateRequest request) {
     if (userRepository.existsByNickName(request.nickName())) {
-      throw new IllegalStateException("이미 사용 중인 닉네임입니다.");
+      throw new DuplicateNicknameException();
     }
     User user = User.create(request.nickName(), request.password());
     User saved = userRepository.save(user);

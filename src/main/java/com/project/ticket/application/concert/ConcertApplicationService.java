@@ -2,6 +2,8 @@ package com.project.ticket.application.concert;
 
 import com.project.ticket.application.concert.dto.ConcertCreateRequest;
 import com.project.ticket.application.concert.dto.ConcertResponse;
+import com.project.ticket.domain.exception.ConcertDeleteForbiddenException;
+import com.project.ticket.domain.exception.ConcertNotFoundException;
 import com.project.ticket.domain.concert.Concert;
 import com.project.ticket.domain.seat.Seat;
 import com.project.ticket.domain.status.SeatStatus;
@@ -35,7 +37,7 @@ public class ConcertApplicationService {
   @Transactional(readOnly = true)
   public ConcertResponse getConcert(Long concertId) {
     Concert concert = concertRepository.findById(concertId)
-        .orElseThrow(() -> new IllegalArgumentException("콘서트를 찾을 수 없습니다."));
+        .orElseThrow(ConcertNotFoundException::new);
     return toResponse(concert);
   }
 
@@ -66,15 +68,15 @@ public class ConcertApplicationService {
   @Transactional
   public void deleteConcert(Long concertId) {
     if (!concertRepository.existsById(concertId)) {
-      throw new IllegalArgumentException("콘서트를 찾을 수 없습니다.");
+      throw new ConcertNotFoundException();
     }
 
     if (reservationRepository.existsByConcertId(concertId)) {
-      throw new IllegalStateException("예매 이력이 있어 콘서트를 삭제할 수 없습니다.");
+      throw new ConcertDeleteForbiddenException("예매 이력이 있어 콘서트를 삭제할 수 없습니다.");
     }
 
     if (seatRepository.existsByConcertIdAndStatus(concertId, SeatStatus.RESERVED)) {
-      throw new IllegalStateException("예약된 좌석이 있어 콘서트를 삭제할 수 없습니다.");
+      throw new ConcertDeleteForbiddenException("예약된 좌석이 있어 콘서트를 삭제할 수 없습니다.");
     }
 
     seatRepository.deleteByConcertId(concertId);

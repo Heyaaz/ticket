@@ -5,6 +5,12 @@ import com.project.ticket.application.reservation.dto.ReservationEnqueueResponse
 import com.project.ticket.application.reservation.dto.ReservationStatusResponse;
 import com.project.ticket.application.reservation.dto.ReservationCancelRequest;
 import com.project.ticket.application.reservation.dto.ReservationCancelResponse;
+import com.project.ticket.domain.exception.AuthorizationException;
+import com.project.ticket.domain.exception.DuplicateQueueRequestException;
+import com.project.ticket.domain.exception.ReservationNotFoundException;
+import com.project.ticket.domain.exception.ReservationQueueNotFoundException;
+import com.project.ticket.domain.exception.SeatNotFoundException;
+import com.project.ticket.domain.exception.UserNotFoundException;
 import com.project.ticket.domain.reservation.Reservation;
 import com.project.ticket.domain.reservation.ReservationQueue;
 import com.project.ticket.domain.seat.Seat;
@@ -35,14 +41,14 @@ public class ReservationApplicationService {
   public ReservationEnqueueResponse requestReservation(ReservationEnqueueRequest request) {
     if (reservationQueueRepository.existsByUserIdAndSeatIdAndStatusIn(
         request.userId(), request.seatId(), List.of(QueueStatus.PENDING, QueueStatus.PROCESSING))) {
-      throw new IllegalStateException("이미 예약 대기열에 등록된 요청입니다.");
+      throw new DuplicateQueueRequestException();
     }
 
     userRepository.findById(request.userId())
-        .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
+        .orElseThrow(UserNotFoundException::new);
 
     seatRepository.findById(request.seatId())
-        .orElseThrow(() -> new IllegalArgumentException("좌석을 찾을 수 없습니다."));
+        .orElseThrow(SeatNotFoundException::new);
 
     ReservationQueue queue = ReservationQueue.create(request.userId(), request.seatId());
 
@@ -55,7 +61,7 @@ public class ReservationApplicationService {
   @Transactional(readOnly = true)
   public ReservationStatusResponse getStatus(Long queueId) {
     ReservationQueue queue = reservationQueueRepository.findById(queueId)
-        .orElseThrow(() -> new IllegalArgumentException("대기열을 찾을 수 없습니다."));
+        .orElseThrow(ReservationQueueNotFoundException::new);
 
     return ReservationStatusResponse.builder()
         .queueId(queue.getId())
@@ -98,10 +104,10 @@ public class ReservationApplicationService {
   @Transactional
   public ReservationCancelResponse cancelReservation(ReservationCancelRequest request) {
     Reservation reservation = reservationRepository.findById(request.reservationId())
-        .orElseThrow(() -> new IllegalArgumentException("예약을 찾을 수 없습니다."));
+        .orElseThrow(ReservationNotFoundException::new);
 
     if (!reservation.getUser().getId().equals(request.userId())) {
-      throw new IllegalArgumentException("본인의 예약만 취소할 수 있습니다.");
+      throw new AuthorizationException();
     }
 
     // 좌석 되돌리고 예약 상태 취소

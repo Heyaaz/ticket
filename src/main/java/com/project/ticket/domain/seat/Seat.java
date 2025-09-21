@@ -1,6 +1,7 @@
 package com.project.ticket.domain.seat;
 
 import com.project.ticket.domain.concert.Concert;
+import com.project.ticket.domain.exception.SeatNotFoundException;
 import com.project.ticket.domain.status.SeatStatus;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;

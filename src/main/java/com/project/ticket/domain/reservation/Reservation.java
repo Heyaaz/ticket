@@ -2,6 +2,7 @@ package com.project.ticket.domain.reservation;
 
 import com.project.ticket.domain.concert.Concert;
 import com.project.ticket.domain.seat.Seat;
+import com.project.ticket.domain.exception.ReservationCancellationNotAllowedException;
 import com.project.ticket.domain.user.User;
 import com.project.ticket.domain.status.ReservationStatus;
 import jakarta.persistence.Column;
@@ -66,7 +67,7 @@ public class Reservation {
 
   public void cancel() {
     if (this.status != ReservationStatus.CONFIRMED) {
-      throw new IllegalStateException("취소할 수 없는 예약 상태입니다.");
+      throw new ReservationCancellationNotAllowedException();
     }
     this.status = ReservationStatus.CANCELLED;
     this.updatedAt = LocalDateTime.now();
