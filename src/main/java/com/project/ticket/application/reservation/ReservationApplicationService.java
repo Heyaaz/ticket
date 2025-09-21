@@ -73,7 +73,7 @@ public class ReservationApplicationService {
   @Transactional
   public void processPendingReservations(int size) {
     List<ReservationQueue> tasks = reservationQueueRepository
-        .findByStatusOrderByCreatedAtAsc(QueueStatus.PENDING, PageRequest.of(0, size));
+        .findAndLockPendingForUpdateSkipLocked(QueueStatus.PENDING.name(), size);
 
     for (ReservationQueue task : tasks) {
       processSingleTask(task);

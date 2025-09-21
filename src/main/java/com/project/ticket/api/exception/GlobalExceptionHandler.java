@@ -16,7 +16,6 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.context.request.WebRequest;
-import org.springframework.web.servlet.NoHandlerFoundException;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
 @ControllerAdvice
@@ -59,19 +58,7 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     return ResponseEntity.badRequest().body(body);
   }
 
-  @Override
-  protected ResponseEntity<Object> handleNoHandlerFoundException(
-      NoHandlerFoundException ex, HttpHeaders headers, HttpStatusCode status, WebRequest request) {
-    ErrorResponse body = ErrorResponse.builder()
-        .timestamp(LocalDateTime.now())
-        .status(HttpStatus.NOT_FOUND.value())
-        .error(HttpStatus.NOT_FOUND.getReasonPhrase())
-        .code("NOT_FOUND")
-        .message("요청한 리소스를 찾을 수 없습니다.")
-        .path(ex.getRequestURL())
-        .build();
-    return ResponseEntity.status(HttpStatus.NOT_FOUND).body(body);
-  }
+  // 404는 Spring Boot 기본 에러 컨트롤러가 처리(Deprecated 설정 제거)
 
   @ExceptionHandler(ConstraintViolationException.class)
   protected ResponseEntity<ErrorResponse> handleConstraintViolation(

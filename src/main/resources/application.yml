@@ -1,13 +1,13 @@
 spring:
   application:
     name: ticket
-  
+
   datasource:
     url: jdbc:mysql://localhost:3306/concert?useSSL=false&serverTimezone=UTC&characterEncoding=UTF-8
     driver-class-name: com.mysql.cj.jdbc.Driver
     username: concert
     password: ticket
-  
+
   jpa:
     hibernate:
       ddl-auto: update
@@ -16,9 +16,13 @@ spring:
       hibernate:
         dialect: org.hibernate.dialect.MySQL8Dialect
         format_sql: true
-  
+
   profiles:
     active: local
+
+  web:
+    resources:
+      add-mappings: false
 
 server:
   port: 8080
@@ -29,9 +33,9 @@ logging:
     org.hibernate.SQL: debug
     org.hibernate.type.descriptor.sql.BasicBinder: trace
 
-spring:
-  mvc:
-    throw-exception-if-no-handler-found: true
-  web:
-    resources:
-      add-mappings: false
+app:
+  reservation:
+    worker:
+      enabled: true        # 워커 활성화 여부
+      delay-ms: 250        # 실행 간격(ms)
+      batch-size: 50       # 한 번에 처리할 작업 개수
