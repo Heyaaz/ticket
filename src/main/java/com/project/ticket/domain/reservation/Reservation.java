@@ -63,4 +63,12 @@ public class Reservation {
     reservation.updatedAt = null;
     return reservation;
   }
+
+  public void cancel() {
+    if (this.status != ReservationStatus.CONFIRMED) {
+      throw new IllegalStateException("취소할 수 없는 예약 상태입니다.");
+    }
+    this.status = ReservationStatus.CANCELLED;
+    this.updatedAt = LocalDateTime.now();
+  }
 }

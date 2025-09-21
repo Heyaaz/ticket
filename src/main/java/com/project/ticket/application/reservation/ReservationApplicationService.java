@@ -3,9 +3,12 @@ package com.project.ticket.application.reservation;
 import com.project.ticket.application.reservation.dto.ReservationEnqueueRequest;
 import com.project.ticket.application.reservation.dto.ReservationEnqueueResponse;
 import com.project.ticket.application.reservation.dto.ReservationStatusResponse;
+import com.project.ticket.application.reservation.dto.ReservationCancelRequest;
+import com.project.ticket.application.reservation.dto.ReservationCancelResponse;
 import com.project.ticket.domain.reservation.Reservation;
 import com.project.ticket.domain.reservation.ReservationQueue;
 import com.project.ticket.domain.seat.Seat;
+import com.project.ticket.domain.status.SeatStatus;
 import com.project.ticket.domain.status.QueueStatus;
 import com.project.ticket.domain.user.User;
 import com.project.ticket.infra.persistence.reservation.ReservationRepository;
@@ -90,5 +93,25 @@ public class ReservationApplicationService {
     } catch (Exception e) {
       task.markFailed();
     }
+  }
+
+  @Transactional
+  public ReservationCancelResponse cancelReservation(ReservationCancelRequest request) {
+    Reservation reservation = reservationRepository.findById(request.reservationId())
+        .orElseThrow(() -> new IllegalArgumentException("예약을 찾을 수 없습니다."));
+
+    if (!reservation.getUser().getId().equals(request.userId())) {
+      throw new IllegalArgumentException("본인의 예약만 취소할 수 있습니다.");
+    }
+
+    // 좌석 되돌리고 예약 상태 취소
+    Seat seat = reservation.getSeat();
+    reservation.cancel();
+    seat.updateStatus(SeatStatus.AVAILABLE);
+
+    return ReservationCancelResponse.builder()
+        .reservationId(reservation.getId())
+        .status(reservation.getStatus())
+        .build();
   }
 }
