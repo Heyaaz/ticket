@@ -25,7 +25,7 @@ class UserApplicationServiceTest {
   void createUser_success() {
     // given
     UserCreateRequest req = UserCreateRequest.builder()
-        .nickName("new")
+        .nickName("neo")
         .password("pw")
         .build();
     when(userRepository.existsByNickName("new")).thenReturn(false);
@@ -49,8 +49,7 @@ class UserApplicationServiceTest {
 
     // expect
     assertThatThrownBy(() -> service.createUser(req))
-        .isInstanceOf(IllegalStateException.class)
+        .isInstanceOf(com.project.ticket.domain.exception.DuplicateNicknameException.class)
         .hasMessageContaining("이미 사용 중인 닉네임");
   }
 }
-

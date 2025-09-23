@@ -39,7 +39,7 @@ class SeatApplicationServiceTest {
 
     // expect
     assertThatThrownBy(() -> service.deleteSeat(1L))
-        .isInstanceOf(IllegalStateException.class)
+        .isInstanceOf(com.project.ticket.domain.exception.SeatReservedDeletionNotAllowedException.class)
         .hasMessageContaining("삭제할 수 없습니다");
   }
 
@@ -67,8 +67,7 @@ class SeatApplicationServiceTest {
 
     // expect
     assertThatThrownBy(() -> service.createSeat(SeatCreateRequest.builder().concertId(9L).seatNumber("A1").build()))
-        .isInstanceOf(IllegalStateException.class)
+        .isInstanceOf(com.project.ticket.domain.exception.DuplicateSeatNumberException.class)
         .hasMessageContaining("이미 존재하는 좌석 번호");
   }
 }
-

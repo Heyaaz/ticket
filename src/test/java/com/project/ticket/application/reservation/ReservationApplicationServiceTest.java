@@ -68,7 +68,7 @@ class ReservationApplicationServiceTest {
 
     // expect
     assertThatThrownBy(() -> service.requestReservation(ReservationEnqueueRequest.builder().userId(1L).seatId(1L).build()))
-        .isInstanceOf(IllegalStateException.class)
+        .isInstanceOf(com.project.ticket.domain.exception.DuplicateQueueRequestException.class)
         .hasMessageContaining("이미 예약 대기열에 등록");
   }
 
@@ -76,7 +76,7 @@ class ReservationApplicationServiceTest {
   void processPendingReservations_reservesSeat_andCreatesReservation() {
     // given
     ReservationQueue task = ReservationQueue.create(1L, 1L);
-    when(reservationQueueRepository.findByStatusOrderByCreatedAtAsc(QueueStatus.PENDING, PageRequest.of(0, 1)))
+    when(reservationQueueRepository.findAndLockPendingForUpdateSkipLocked(QueueStatus.PENDING.name(), 1))
         .thenReturn(List.of(task));
 
     User user = User.create("new", "pw");
@@ -94,4 +94,3 @@ class ReservationApplicationServiceTest {
     assertThat(task.getStatus()).isEqualTo(QueueStatus.SUCCESS);
   }
 }
-

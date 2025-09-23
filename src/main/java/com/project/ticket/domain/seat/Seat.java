@@ -1,7 +1,7 @@
 package com.project.ticket.domain.seat;
 
 import com.project.ticket.domain.concert.Concert;
-import com.project.ticket.domain.exception.SeatNotFoundException;
+import com.project.ticket.domain.exception.SeatNotAvailableException;
 import com.project.ticket.domain.status.SeatStatus;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -18,6 +18,8 @@ import java.time.LocalDateTime;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import com.project.ticket.domain.exception.InvalidSeatNumberException;
+import com.project.ticket.domain.exception.InvalidSeatStatusException;
 
 @Entity
 @Getter
@@ -48,7 +50,7 @@ public class Seat {
 
   public void reserve() {
     if (this.status != SeatStatus.AVAILABLE) {
-      throw new IllegalStateException("예약이 불가능한 좌석입니다.");
+      throw new SeatNotAvailableException();
     }
     this.status = SeatStatus.RESERVED;
     this.updatedAt = LocalDateTime.now();
@@ -66,7 +68,7 @@ public class Seat {
 
   public void updateSeatNumber(String newSeatNumber) {
     if (newSeatNumber == null || newSeatNumber.isBlank()) {
-      throw new IllegalArgumentException("좌석 번호는 필수입니다.");
+      throw new InvalidSeatNumberException();
     }
     this.seatNumber = newSeatNumber;
     this.updatedAt = LocalDateTime.now();
@@ -74,7 +76,7 @@ public class Seat {
 
   public void updateStatus(SeatStatus newStatus) {
     if (newStatus == null) {
-      throw new IllegalArgumentException("좌석 상태는 필수입니다.");
+      throw new InvalidSeatStatusException();
     }
     this.status = newStatus;
     this.updatedAt = LocalDateTime.now();

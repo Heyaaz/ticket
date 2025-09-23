@@ -85,10 +85,10 @@ public class ReservationApplicationService {
       task.markProcessing();
 
       User user = userRepository.findById(task.getUserId())
-          .orElseThrow(() -> new IllegalStateException("사용자 정보가 존재하지 않습니다."));
+          .orElseThrow(UserNotFoundException::new);
 
       Seat seat = seatRepository.findById(task.getSeatId())
-          .orElseThrow(() -> new IllegalStateException("좌석 정보가 존재하지 않습니다."));
+          .orElseThrow(SeatNotFoundException::new);
 
       seat.reserve();
 

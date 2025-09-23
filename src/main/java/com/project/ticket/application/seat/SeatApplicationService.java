@@ -85,10 +85,10 @@ public class SeatApplicationService {
   @Transactional
   public long deleteSeatsByConcert(Long concertId) {
     if (!concertRepository.existsById(concertId)) {
-      throw new IllegalArgumentException("콘서트를 찾을 수 없습니다.");
+      throw new ConcertNotFoundException();
     }
     if (seatRepository.existsByConcertIdAndStatus(concertId, SeatStatus.RESERVED)) {
-      throw new IllegalStateException("예약된 좌석이 있어 일괄 삭제할 수 없습니다.");
+      throw new SeatReservedDeletionNotAllowedException();
     }
     return seatRepository.deleteByConcertId(concertId);
   }

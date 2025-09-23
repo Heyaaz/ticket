@@ -10,6 +10,8 @@ import java.time.LocalDateTime;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import com.project.ticket.domain.exception.InvalidNicknameException;
+import com.project.ticket.domain.exception.InvalidPasswordException;
 
 @Entity
 @Getter
@@ -33,10 +35,10 @@ public class User {
 
   public static User create(String nickName, String password) {
     if (nickName == null || nickName.isBlank()) {
-      throw new IllegalArgumentException("닉네임은 필수입니다.");
+      throw new InvalidNicknameException();
     }
     if (password == null || password.isBlank()) {
-      throw new IllegalArgumentException("패스워드는 필수입니다.");
+      throw new InvalidPasswordException();
     }
     User u = new User();
     u.nickName = nickName;
