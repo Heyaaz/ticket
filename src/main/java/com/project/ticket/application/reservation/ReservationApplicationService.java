@@ -21,7 +21,6 @@ import com.project.ticket.infra.persistence.reservation.ReservationRepository;
 import com.project.ticket.infra.persistence.reservationqueue.ReservationQueueRepository;
 import com.project.ticket.infra.persistence.seat.SeatRepository;
 import com.project.ticket.infra.persistence.user.UserRepository;
-import org.springframework.data.domain.PageRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -36,6 +35,7 @@ public class ReservationApplicationService {
   private final ReservationRepository reservationRepository;
   private final SeatRepository seatRepository;
   private final UserRepository userRepository;
+  private final ReservationTaskProcessor reservationTaskProcessor;
 
   @Transactional
   public ReservationEnqueueResponse requestReservation(ReservationEnqueueRequest request) {
@@ -70,35 +70,21 @@ public class ReservationApplicationService {
         .build();
   }
 
-  @Transactional
   public void processPendingReservations(int size) {
-    List<ReservationQueue> tasks = reservationQueueRepository
-        .findAndLockPendingForUpdateSkipLocked(QueueStatus.PENDING.name(), size);
-
-    for (ReservationQueue task : tasks) {
-      processSingleTask(task);
+    List<Long> taskIds = lockAndMarkPending(size);
+    for (Long id : taskIds) {
+      reservationTaskProcessor.processSingleTask(id);
     }
   }
 
-  private void processSingleTask(ReservationQueue task) {
-    try {
+  @Transactional
+  public List<Long> lockAndMarkPending(int size) {
+    List<ReservationQueue> tasks = reservationQueueRepository
+        .findAndLockPendingForUpdateSkipLocked(QueueStatus.PENDING.name(), size);
+    for (ReservationQueue task : tasks) {
       task.markProcessing();
-
-      User user = userRepository.findById(task.getUserId())
-          .orElseThrow(UserNotFoundException::new);
-
-      Seat seat = seatRepository.findById(task.getSeatId())
-          .orElseThrow(SeatNotFoundException::new);
-
-      seat.reserve();
-
-      Reservation reservation = Reservation.create(user, seat);
-      reservationRepository.save(reservation);
-
-      task.markSuccess(reservation.getId());
-    } catch (Exception e) {
-      task.markFailed();
     }
+    return tasks.stream().map(ReservationQueue::getId).toList();
   }
 
   @Transactional

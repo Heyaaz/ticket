@@ -36,6 +36,7 @@ class ReservationApplicationServiceTest {
   @Mock private ReservationRepository reservationRepository;
   @Mock private SeatRepository seatRepository;
   @Mock private UserRepository userRepository;
+  @Mock private ReservationTaskProcessor reservationTaskProcessor;
 
   @InjectMocks private ReservationApplicationService service;
 
@@ -73,24 +74,17 @@ class ReservationApplicationServiceTest {
   }
 
   @Test
-  void processPendingReservations_reservesSeat_andCreatesReservation() {
+  void processPendingReservations_callsProcessorPerTask() {
     // given
     ReservationQueue task = ReservationQueue.create(1L, 1L);
     when(reservationQueueRepository.findAndLockPendingForUpdateSkipLocked(QueueStatus.PENDING.name(), 1))
         .thenReturn(List.of(task));
 
-    User user = User.create("new", "pw");
-    Concert concert = Concert.create("t", "v", java.time.LocalDateTime.now().plusDays(1));
-    Seat seat = Seat.create(concert, "A1");
-    when(userRepository.findById(1L)).thenReturn(Optional.of(user));
-    when(seatRepository.findById(1L)).thenReturn(Optional.of(seat));
-    when(reservationRepository.save(any(Reservation.class))).thenAnswer(inv -> inv.getArgument(0));
-
     // when
     service.processPendingReservations(1);
 
     // then
-    assertThat(seat.getStatus()).isEqualTo(SeatStatus.RESERVED);
-    assertThat(task.getStatus()).isEqualTo(QueueStatus.SUCCESS);
+    org.mockito.Mockito.verify(reservationTaskProcessor)
+        .processSingleTask(task.getId());
   }
 }
