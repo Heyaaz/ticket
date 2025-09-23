@@ -1,5 +1,6 @@
 package com.project.ticket.application.reservation;
 
+import com.project.ticket.domain.exception.SeatNotAvailableException;
 import com.project.ticket.domain.exception.SeatNotFoundException;
 import com.project.ticket.domain.exception.UserNotFoundException;
 import com.project.ticket.domain.reservation.Reservation;
@@ -25,7 +26,7 @@ public class ReservationTaskProcessor {
   private final UserRepository userRepository;
 
   @Transactional(propagation = Propagation.REQUIRES_NEW)
-  public void processSingleTask(Long taskId) {
+  public void processSingleTask(Long taskId) throws SeatNotAvailableException {
     ReservationQueue task = reservationQueueRepository.findById(taskId)
         .orElse(null);
     if (task == null) return;
@@ -33,10 +34,13 @@ public class ReservationTaskProcessor {
       User user = userRepository.findById(task.getUserId())
           .orElseThrow(UserNotFoundException::new);
 
+      int updated = seatRepository.reserveIfAvailable(task.getSeatId());
+      if (updated == 0) {
+        throw new SeatNotAvailableException();
+      }
+
       Seat seat = seatRepository.findById(task.getSeatId())
           .orElseThrow(SeatNotFoundException::new);
-
-      seat.reserve();
 
       Reservation reservation = Reservation.create(user, seat);
       reservationRepository.save(reservation);
@@ -47,4 +51,3 @@ public class ReservationTaskProcessor {
     }
   }
 }
-
