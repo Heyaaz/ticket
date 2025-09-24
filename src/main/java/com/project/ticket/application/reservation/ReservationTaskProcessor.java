@@ -1,5 +1,6 @@
 package com.project.ticket.application.reservation;
 
+import com.project.ticket.application.reservation.event.ReservationSucceededEvent;
 import com.project.ticket.domain.exception.SeatNotAvailableException;
 import com.project.ticket.domain.exception.SeatNotFoundException;
 import com.project.ticket.domain.exception.UserNotFoundException;
@@ -12,6 +13,7 @@ import com.project.ticket.infra.persistence.reservationqueue.ReservationQueueRep
 import com.project.ticket.infra.persistence.seat.SeatRepository;
 import com.project.ticket.infra.persistence.user.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -24,6 +26,7 @@ public class ReservationTaskProcessor {
   private final ReservationRepository reservationRepository;
   private final SeatRepository seatRepository;
   private final UserRepository userRepository;
+  private final ApplicationEventPublisher eventPublisher;
 
   @Transactional(propagation = Propagation.REQUIRES_NEW)
   public void processSingleTask(Long taskId) throws SeatNotAvailableException {
@@ -46,6 +49,11 @@ public class ReservationTaskProcessor {
       reservationRepository.save(reservation);
 
       task.markSuccess(reservation.getId());
+
+      // publish event
+      eventPublisher.publishEvent(new ReservationSucceededEvent(
+          user.getId(), reservation.getId(), reservation.getConcert().getId(), seat.getId()
+      ));
     } catch (Exception e) {
       task.markFailed();
     }

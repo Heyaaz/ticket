@@ -39,3 +39,5 @@ app:
       enabled: true        # 워커 활성화 여부
       delay-ms: 250        # 실행 간격(ms)
       batch-size: 50       # 한 번에 처리할 작업 개수
+  notifications:
+    enabled: true          # 예약 성공 알림 on/off
